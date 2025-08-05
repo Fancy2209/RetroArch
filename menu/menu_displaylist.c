@@ -1069,7 +1069,7 @@ end:
          /* Reset core options */
          if (menu_entries_append(list,
                msg_hash_to_str(MENU_ENUM_LABEL_VALUE_CORE_OPTIONS_RESET),
-               core_info->core_name,
+               core_info ? core_info->core_name : NULL,
                MENU_ENUM_LABEL_CORE_OPTIONS_RESET,
                MENU_SETTING_ACTION_CORE_OPTIONS_RESET, 0, 0, NULL))
             count++;
@@ -6377,7 +6377,7 @@ static int menu_displaylist_parse_playlist_generic(
 
 #ifdef HAVE_BLUETOOTH
 static void bluetooth_scan_callback(retro_task_t *task,
-      void *task_data, void *user_data, const char *error)
+      void *task_data, void *user_data, const char *err)
 {
    unsigned i;
    struct string_list *device_list   = NULL;
@@ -6419,7 +6419,7 @@ static void bluetooth_scan_callback(retro_task_t *task,
 #if defined(HAVE_NETWORKING) && defined(HAVE_WIFI)
 static void wifi_scan_callback(retro_task_t *task,
       void *task_data,
-      void *user_data, const char *error)
+      void *user_data, const char *err)
 {
    struct menu_state *menu_st = menu_state_get_ptr();
    menu_st->flags            |=  MENU_ST_FLAG_PREVENT_POPULATE
@@ -12100,37 +12100,36 @@ static unsigned menu_displaylist_build_shader_parameter(
 }
 
 #ifdef HAVE_NETWORKING
-static size_t print_buf_lines(file_list_t *list, char *buf,
-      const char *label, size_t buf_size,
-      enum msg_file_type type, bool append)
+static size_t print_buf_lines(file_list_t *list, const char *label,
+      char *s, size_t len, enum msg_file_type type, bool append)
 {
    char c;
    size_t i;
    size_t count     = 0;
-   char *line_start = buf;
+   char *line_start = s;
 
-   if (!buf || !buf_size)
+   if (!s || !len)
       return 0;
 
-   for (i = 0; i < buf_size; i++)
+   for (i = 0; i < len; i++)
    {
-      size_t ln;
+      size_t _len;
 
       /* The end of the buffer, print the last bit */
-      if (*(buf + i) == '\0')
+      if (*(s + i) == '\0')
          break;
 
-      if (*(buf + i) != '\n')
+      if (*(s + i) != '\n')
          continue;
 
       /* Found a line ending, print the line and compute new line_start */
-      c              = *(buf + i + 1); /* Save the next character  */
-      *(buf + i + 1) = '\0';           /* Replace with \0          */
+      c            = *(s + i + 1); /* Save the next character  */
+      *(s + i + 1) = '\0';         /* Replace with \0          */
 
       /* We need to strip the newline. */
-      ln             = strlen(line_start) - 1;
-      if (line_start[ln] == '\n')
-         line_start[ln] = '\0';
+      _len = strlen(line_start) - 1;
+      if (line_start[_len] == '\n')
+         line_start[_len] = '\0';
 
       if (append)
       {
@@ -12146,8 +12145,8 @@ static size_t print_buf_lines(file_list_t *list, char *buf,
       }
 
       /* Restore the saved character */
-      *(buf + i + 1) = c;
-      line_start     = buf + i + 1;
+      *(s + i + 1) = c;
+      line_start   = s + i + 1;
    }
 
    if (append && type != FILE_TYPE_DOWNLOAD_LAKKA)
@@ -13144,6 +13143,7 @@ bool menu_displaylist_ctl(enum menu_displaylist_ctl_state type,
                   free(info->label);
                   info->label  = NULL;
                }
+
                if (!string_is_empty(info->path_b))
                {
                   free(info->path_b);
@@ -13368,7 +13368,7 @@ bool menu_displaylist_ctl(enum menu_displaylist_ctl_state type,
          case DISPLAYLIST_CORE_CONTENT:
             menu_entries_clear(info->list);
 #ifdef HAVE_NETWORKING
-            count = (unsigned)print_buf_lines(info->list, menu->core_buf, "",
+            count = (unsigned)print_buf_lines(info->list, "", menu->core_buf,
                   menu->core_len, FILE_TYPE_DOWNLOAD_CORE_CONTENT,
                   true);
 
@@ -13402,7 +13402,7 @@ bool menu_displaylist_ctl(enum menu_displaylist_ctl_state type,
                free(info_path_cpy);
 
                if ((count = (unsigned)print_buf_lines(
-                           info->list, menu->core_buf, new_label,
+                           info->list, new_label, menu->core_buf,
                            menu->core_len, FILE_TYPE_DOWNLOAD_URL,
                            false)) == 0)
                   menu_entries_append(info->list,
@@ -13431,7 +13431,7 @@ bool menu_displaylist_ctl(enum menu_displaylist_ctl_state type,
                      network_buildbot_assets_url,
                      "cores", sizeof(new_label));
 
-               if ((count = (unsigned)print_buf_lines(info->list, menu->core_buf, new_label,
+               if ((count = (unsigned)print_buf_lines(info->list, new_label, menu->core_buf,
                            menu->core_len, FILE_TYPE_DOWNLOAD_URL, true)) == 0)
                   menu_entries_append(info->list,
                         msg_hash_to_str(MENU_ENUM_LABEL_VALUE_NO_ENTRIES_TO_DISPLAY),
@@ -13448,7 +13448,7 @@ bool menu_displaylist_ctl(enum menu_displaylist_ctl_state type,
          case DISPLAYLIST_CORE_SYSTEM_FILES:
             menu_entries_clear(info->list);
 #ifdef HAVE_NETWORKING
-            count = (unsigned)print_buf_lines(info->list, menu->core_buf, "",
+            count = (unsigned)print_buf_lines(info->list, "", menu->core_buf,
                   menu->core_len, FILE_TYPE_DOWNLOAD_CORE_SYSTEM_FILES,
                   true);
 
@@ -13570,7 +13570,7 @@ bool menu_displaylist_ctl(enum menu_displaylist_ctl_state type,
          case DISPLAYLIST_LAKKA:
             menu_entries_clear(info->list);
 #ifdef HAVE_NETWORKING
-            count = (unsigned)print_buf_lines(info->list, menu->core_buf, "",
+            count = (unsigned)print_buf_lines(info->list, "", menu->core_buf,
                   menu->core_len, FILE_TYPE_DOWNLOAD_LAKKA,
                   true);
 
