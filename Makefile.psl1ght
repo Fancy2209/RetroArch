@@ -14,6 +14,7 @@ include version.all
 DEBUG			= 0
 HAVE_LOGGER		= 0
 HAVE_FILE_LOGGER	= 1
+BIG_STACK = 1
 
 PC_DEVELOPMENT_IP_ADDRESS	= "192.168.1.7"
 PC_DEVELOPMENT_UDP_PORT		= 3490
@@ -75,6 +76,10 @@ endif
 
 ifeq ($(HAVE_FILE_LOGGER), 1)
 CFLAGS		+= -DHAVE_FILE_LOGGER
+endif
+
+ifeq ($(BIG_STACK),1)
+   CFLAGS      += -DBIG_STACK
 endif
 
 SHARED_FLAGS :=
