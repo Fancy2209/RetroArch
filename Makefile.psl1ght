@@ -11,10 +11,13 @@ include $(PSL1GHT)/ppu_rules
 
 include version.all
 
-DEBUG			= 0
-HAVE_LOGGER		= 0
-HAVE_FILE_LOGGER	= 1
-BIG_STACK = 1
+DEBUG						= 0
+HAVE_LOGGER					= 0
+HAVE_FILE_LOGGER			= 1
+BIG_STACK 					= 1
+HAVE_OPENGL_CORE 			= 1
+HAVE_GLSL 					= 1
+HAVE_GCM 					= 0
 
 PC_DEVELOPMENT_IP_ADDRESS	= "192.168.1.7"
 PC_DEVELOPMENT_UDP_PORT		= 3490
@@ -36,6 +39,10 @@ ifeq ($(HAVE_STATIC_DUMMY),1)
    LIBS :=
 else
    LIBS := -lretro_psl1ght
+endif
+
+ifeq ($(HAVE_OPENGL_CORE), 1)
+	LIBS += -lEGL -lGL -lstdc++
 endif
 
 MACHDEP := -D__PSL1GHT__ -D__PS3__ -mcpu=cell
@@ -61,14 +68,30 @@ else
 GIT			= git.exe
 endif
 
+ifeq ($(HAVE_GCM), 1)
 SHADER_OBJS = gfx/drivers/rsx_shaders/modern_opaque.vpo.o \
               gfx/drivers/rsx_shaders/modern_opaque.fpo.o \
               gfx/drivers/rsx_shaders/modern_alpha_blend.vpo.o \
               gfx/drivers/rsx_shaders/modern_alpha_blend.fpo.o
+endif
 
 LIBCO_OBJ = libretro-common/libco/ps3.o
 
 OBJ = $(SHADER_OBJS) $(LIBCO_OBJ) libretro-common/memmap/memmap.o griffin/griffin.o
+
+ifeq ($(HAVE_OPENGL_CORE), 1)
+    CFLAGS += -DHAVE_OPENGL_CORE -DHAVE_OPENGL_MODERN -DHAVE_RSXGL
+    #OBJ += gfx/drivers/gl3.o
+endif
+
+ifeq ($(HAVE_GLSL), 1)
+   DEFINES += -DHAVE_GLSL
+   #OBJ += gfx/drivers_shader/shader_glsl.o
+endif
+
+ifeq ($(HAVE_GCM), 1)
+	SHARED_FLAGS += -DHAVE_GCM
+endif
 
 ifeq ($(HAVE_LOGGER), 1)
 CFLAGS		+= -DHAVE_LOGGER
@@ -84,7 +107,6 @@ endif
 
 SHARED_FLAGS :=
 
-SHARED_FLAGS += -DHAVE_GCM
 SHARED_FLAGS += -DHAVE_MENU \
 		-DHAVE_CONFIGFILE \
 		-DHAVE_PATCH \

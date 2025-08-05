@@ -20,6 +20,7 @@
 
 #ifdef __PSL1GHT__
 #include <io/kb.h>
+#include <malloc.h>
 #else
 #include <sdk_version.h>
 #include <cell/keyboard.h>

@@ -20,6 +20,10 @@
 #include "../../config.h"
 #endif
 
+#ifdef HAVE_RSXGL
+#include "../common/egl_common.h"
+#endif
+
 #ifndef __PSL1GHT__
 #include <sys/spu_initialize.h>
 #endif
@@ -38,9 +42,19 @@
 #include "../common/gl_common.h"
 #include "../common/gl2_common.h"
 #endif
+#if defined(HAVE_RSXGL)
+#define GL3_PROTOTYPES
+#include <GL3/gl3.h>
+#include <GL3/gl3ext.h>
+#include <GL3/rsxgl.h>
+#include <GL3/rsxgl3ext.h>
+#endif
 
 typedef struct gfx_ctx_ps3_data
 {
+#ifdef HAVE_RSXGL
+   egl_ctx_data_t egl;
+#endif
 #if defined(HAVE_PSGL)
    PSGLdevice* gl_device;
    PSGLcontext* gl_context;
@@ -52,6 +66,8 @@ typedef struct gfx_ctx_ps3_data
 /* TODO/FIXME - static global */
 #ifdef HAVE_GCM
 static enum gfx_ctx_api ps3_api = GFX_CTX_RSX_API;
+#elif defined(HAVE_RSXGL)
+static enum gfx_ctx_api ps3_api = GFX_CTX_OPENGL_API;
 #else
 static enum gfx_ctx_api ps3_api = GFX_CTX_NONE;
 #endif
@@ -170,6 +186,10 @@ static void gfx_ctx_ps3_swap_buffers(void *data)
    if (ps3_api == GFX_CTX_OPENGL_API || ps3_api == GFX_CTX_OPENGL_ES_API)
       psglSwap();
 #endif
+#ifdef HAVE_RSXGL
+   if (ps3_api == GFX_CTX_OPENGL_API)
+      egl_swap_buffers(&(((gfx_ctx_ps3_data_t*)data)->egl));
+#endif
 #ifdef HAVE_SYSUTILS
    cellSysutilCheckCallback();
 #endif
@@ -186,6 +206,39 @@ static void gfx_ctx_ps3_get_video_size(void *data,
          psglGetDeviceDimensions(ps3->gl_device, width, height);
    }
 #endif
+}
+
+static void gfx_ctx_ps3_destroy_resources(gfx_ctx_ps3_data_t *ps3)
+{
+#ifdef HAVE_RSXGL
+   if (!ps3)
+      return;
+   if (ps3_api == GFX_CTX_OPENGL_API)
+   {
+      egl_destroy(&ps3->egl);
+   }
+#endif
+#if defined(HAVE_PSGL)
+   if (!ps3)
+      return;
+   if (ps3_api == GFX_CTX_OPENGL_API || ps3_api == GFX_CTX_OPENGL_ES_API)
+   {
+      psglDestroyContext(ps3->gl_context);
+      psglDestroyDevice(ps3->gl_device);
+      psglExit();
+   }
+#endif
+}
+
+static void gfx_ctx_ps3_destroy(void *data)
+{
+   gfx_ctx_ps3_data_t *ps3_ctx = (gfx_ctx_ps3_data_t*)data;
+
+   if (!ps3_ctx)
+      return;
+
+   gfx_ctx_ps3_destroy_resources(ps3_ctx);
+   free(data);
 }
 
 static void *gfx_ctx_ps3_init(void *video_driver)
@@ -250,6 +303,23 @@ static void *gfx_ctx_ps3_init(void *video_driver)
    psglResetCurrentContext();
 #endif
 
+#ifdef HAVE_RSXGL
+   EGLint n;
+   EGLint major, minor;
+   static const EGLint attribs[] = {
+      EGL_RED_SIZE, 8,
+      EGL_GREEN_SIZE, 8,
+      EGL_BLUE_SIZE, 8,
+      EGL_ALPHA_SIZE, 8,
+      EGL_DEPTH_SIZE, 16,
+      EGL_STENCIL_SIZE, 0,
+      EGL_SAMPLE_BUFFERS, 0,
+      EGL_SAMPLES, 0,
+      EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+      EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+      EGL_NONE};
+#endif
+
    global->console.screen.pal_enable =
       cellVideoOutGetResolutionAvailability(
             CELL_VIDEO_OUT_PRIMARY, CELL_VIDEO_OUT_RESOLUTION_576,
@@ -257,36 +327,22 @@ static void *gfx_ctx_ps3_init(void *video_driver)
 
    gfx_ctx_ps3_get_available_resolutions();
 
+#ifdef HAVE_RSXGL
+   if (!egl_init_context(&ps3->egl, EGL_NONE, EGL_DEFAULT_DISPLAY,
+            &major, &minor, &n, attribs, NULL))
+   {
+      egl_report_error();
+      gfx_ctx_ps3_destroy(video_driver);
+      return NULL;   
+   }
+#endif
+
    return ps3;
 }
 
 static bool gfx_ctx_ps3_set_video_mode(void *data,
       unsigned width, unsigned height, bool fullscreen) { return true; }
 
-static void gfx_ctx_ps3_destroy_resources(gfx_ctx_ps3_data_t *ps3)
-{
-#if defined(HAVE_PSGL)
-   if (!ps3)
-      return;
-   if (ps3_api == GFX_CTX_OPENGL_API || ps3_api == GFX_CTX_OPENGL_ES_API)
-   {
-      psglDestroyContext(ps3->gl_context);
-      psglDestroyDevice(ps3->gl_device);
-      psglExit();
-   }
-#endif
-}
-
-static void gfx_ctx_ps3_destroy(void *data)
-{
-   gfx_ctx_ps3_data_t *ps3 = (gfx_ctx_ps3_data_t*)data;
-
-   if (!ps3)
-      return;
-
-   gfx_ctx_ps3_destroy_resources(ps3);
-   free(data);
-}
 
 static void gfx_ctx_ps3_input_driver(void *data,
       const char *joypad_name,
@@ -306,6 +362,11 @@ static bool gfx_ctx_ps3_bind_api(void *data,
    ps3_api = api;
 #ifdef HAVE_PSGL
    if (ps3_api == GFX_CTX_OPENGL_API || ps3_api == GFX_CTX_OPENGL_ES_API)
+      return true;
+#endif
+
+#ifdef HAVE_RSXGL
+   if (ps3_api == GFX_CTX_OPENGL_API)
       return true;
 #endif
 #ifdef HAVE_GCM
@@ -377,6 +438,10 @@ static uint32_t gfx_ctx_ps3_get_flags(void *data)
 
 #ifdef HAVE_CG
    BIT32_SET(flags, GFX_CTX_FLAGS_SHADERS_CG);
+#endif
+
+#ifdef HAVE_GLSL
+   BIT32_SET(flags, GFX_CTX_FLAGS_SHADERS_GLSL);
 #endif
 
    return flags;

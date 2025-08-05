@@ -46,6 +46,9 @@
 #include <PSGL/psgl.h>
 #include <GLES/glext.h>
 #elif defined(HAVE_OPENGL_MODERN)
+#ifdef HAVE_RSXGL
+#define GL3_PROTOTYPES
+#endif
 #include <GL3/gl3.h>
 #include <GL3/gl3ext.h>
 #elif defined(HAVE_OPENGLES3)
