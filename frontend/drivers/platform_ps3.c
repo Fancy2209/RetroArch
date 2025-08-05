@@ -66,10 +66,14 @@
 static uint8_t np_pool[NP_POOL_SIZE];
 #endif
 
+#ifdef BIG_STACK
+SYS_PROCESS_PARAM(1001, 0x800000)
+#else
 #ifdef IS_SALAMANDER
 SYS_PROCESS_PARAM(1001, 0x100000)
 #else
 SYS_PROCESS_PARAM(1001, 0x200000)
+#endif
 #endif
 
 #ifndef __PSL1GHT__
