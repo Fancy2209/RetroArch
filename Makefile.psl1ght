@@ -80,7 +80,9 @@ LIBCO_OBJ = libretro-common/libco/ps3.o
 OBJ = $(SHADER_OBJS) $(LIBCO_OBJ) libretro-common/memmap/memmap.o griffin/griffin.o
 
 ifeq ($(HAVE_OPENGL_CORE), 1)
-    CFLAGS += -DHAVE_OPENGL_CORE -DHAVE_OPENGL_MODERN -DHAVE_RSXGL
+    CFLAGS += -DHAVE_OPENGL_CORE -DHAVE_OPENGL_MODERN
+	CFLAGS += -DHAVE_EGL 
+	CFLAGS += -DHAVE_RSXGL
     #OBJ += gfx/drivers/gl3.o
 endif
 

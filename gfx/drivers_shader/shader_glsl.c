@@ -32,6 +32,13 @@
 #include "../common/gl2_common.h"
 #endif
 
+#if defined(HAVE_RSXGL)
+#define GL3_PROTOTYPES
+#include <GL3/gl3.h>
+#include <GL3/gl3ext.h>
+#include "../../libretro-common/include/gfx/math/matrix_4x4.h"
+#endif
+
 #include "shader_glsl.h"
 #ifdef HAVE_REWIND
 #include "../../state_manager.h"
@@ -1166,12 +1173,13 @@ static void *gl_glsl_init(void *data, const char *path)
 
    if (!gl_glsl_compile_programs(glsl, &glsl->prg[1]))
       goto error;
-
+#if !defined(HAVE_OPENGL_CORE) || defined(HAVE_OPENGL)
    if (!gl2_load_luts(glsl->shader, glsl->lut_textures))
    {
       RARCH_ERR("[GLSL] Failed to load LUTs.\n");
       goto error;
    }
+#endif
 
    for (i = 0; i <= glsl->shader->passes; i++)
       gl_glsl_find_uniforms(glsl, i, glsl->prg[i].id, &glsl->uniforms[i]);

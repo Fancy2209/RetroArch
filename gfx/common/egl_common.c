@@ -127,7 +127,9 @@ static PFN_EGL_SWAP_INTERVAL             _egl_swap_interval;
 #define _egl_query_string(a, b) eglQueryString(a, b)
 #define _egl_get_config_attrib(a, b, c, d) eglGetConfigAttrib(a, b, c, d)
 #define _egl_swap_buffers(a, b) eglSwapBuffers(a, b)
+#ifndef HAVE_RSXGL
 #define _egl_swap_interval(a, b) eglSwapInterval(a, b)
+#endif
 #endif
 
 bool egl_init_dll(void)
@@ -395,12 +397,13 @@ void egl_set_swap_interval(egl_ctx_data_t *egl, int interval)
       return;
    if (!_egl_get_current_context())
       return;
-
+#ifndef HAVE_RSXGL
    if (!_egl_swap_interval(egl->dpy, interval))
    {
       RARCH_ERR("[EGL] eglSwapInterval(%i) failed.\n", interval);
       egl_report_error();
    }
+#endif
 }
 
 void egl_get_video_size(egl_ctx_data_t *egl, unsigned *width, unsigned *height)
