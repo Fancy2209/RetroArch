@@ -15,6 +15,8 @@
  */
 
 #include <stdio.h>
+#include "../../retroarch.h"
+#include "../../menu/menu_entries.h"
 
 #include <sys/process.h>
 #if !defined(__PSL1GHT__)
@@ -100,6 +102,7 @@ static enum frontend_fork ps3_fork_mode = FRONTEND_FORK_NONE;
 
 static void frontend_ps3_shutdown(bool unused)
 {
+   fflush(NULL);
    sysProcessExit(0);
 }
 #endif
@@ -160,7 +163,7 @@ static void fill_derived_paths(void)
 		       "system", sizeof(g_defaults.dirs[DEFAULT_DIR_SYSTEM]));
     fill_pathname_join(g_defaults.dirs[DEFAULT_DIR_SHADER],
 		       g_defaults.dirs[DEFAULT_DIR_PORT],
-		       "shaders_cg", sizeof(g_defaults.dirs[DEFAULT_DIR_SHADER]));
+		       "shaders_glsl", sizeof(g_defaults.dirs[DEFAULT_DIR_SHADER]));
     fill_pathname_join(g_defaults.path_config, g_defaults.dirs[DEFAULT_DIR_PORT],
 		       FILE_PATH_MAIN_CONFIG,  sizeof(g_defaults.path_config));
     fill_pathname_join(g_defaults.dirs[DEFAULT_DIR_OVERLAY],

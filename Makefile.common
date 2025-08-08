@@ -34,6 +34,11 @@ ifeq ($(HAVE_GL_CONTEXT),)
       HAVE_GL_MODERN  = 1
    endif
 
+   ifeq ($(HAVE_OPENGL_CORE), 1)
+      HAVE_GL_CONTEXT = 1
+      HAVE_GL_MODERN  = 1
+   endif
+
    ifeq ($(HAVE_OPENGL1), 1)
       HAVE_GL_CONTEXT = 1
    endif
@@ -1520,9 +1525,14 @@ endif
 ifeq ($(HAVE_GL_CONTEXT), 1)
    OBJ += gfx/common/gl_common.o
    ifeq ($(HAVE_GL_MODERN), 1)
-      DEFINES += -DHAVE_OPENGL
-      OBJ += gfx/drivers/gl2.o \
-             $(LIBRETRO_COMM_DIR)/gfx/gl_capabilities.o
+      ifeq ($(HAVE_GL_CORE), 1)
+         DEFINES += -DHAVE_OPENGL_CORE
+         OBJ += gfx/drivers/gl3.o
+      else
+         DEFINES += -DHAVE_OPENGL
+         OBJ += gfx/drivers/gl2.o
+      endif
+      OBJ += $(LIBRETRO_COMM_DIR)/gfx/gl_capabilities.o
    endif
 
    OBJ += $(LIBRETRO_COMM_DIR)/glsym/rglgen.o

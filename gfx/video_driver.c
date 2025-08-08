@@ -351,10 +351,10 @@ const video_driver_t *video_drivers[] = {
 #ifdef HAVE_VULKAN
    &video_vulkan,
 #endif
-#if defined(HAVE_OPENGL_CORE)
+#if defined(HAVE_OPENGL_CORE) || defined(__PSL1GHT__)
    &video_gl3,
 #endif
-#ifdef HAVE_OPENGL
+#if defined(HAVE_OPENGL) || !defined(__PSL1GHT__)
    &video_gl2,
 #endif
 #ifdef HAVE_OPENGL1

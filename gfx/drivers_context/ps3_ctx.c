@@ -20,7 +20,7 @@
 #include "../../config.h"
 #endif
 
-#ifdef HAVE_RSXGL
+#ifdef HAVE_EGL
 #include "../common/egl_common.h"
 #endif
 
@@ -42,8 +42,7 @@
 #include "../common/gl_common.h"
 #include "../common/gl2_common.h"
 #endif
-#if defined(HAVE_RSXGL)
-#define GL3_PROTOTYPES
+#if defined(HAVE_EGL)
 #include <GL3/gl3.h>
 #include <GL3/gl3ext.h>
 #include <GL3/rsxgl.h>
@@ -52,7 +51,7 @@
 
 typedef struct gfx_ctx_ps3_data
 {
-#ifdef HAVE_RSXGL
+#ifdef HAVE_EGL
    egl_ctx_data_t egl;
 #endif
 #if defined(HAVE_PSGL)
@@ -66,7 +65,7 @@ typedef struct gfx_ctx_ps3_data
 /* TODO/FIXME - static global */
 #ifdef HAVE_GCM
 static enum gfx_ctx_api ps3_api = GFX_CTX_RSX_API;
-#elif defined(HAVE_RSXGL)
+#elif defined(HAVE_EGL)
 static enum gfx_ctx_api ps3_api = GFX_CTX_OPENGL_API;
 #else
 static enum gfx_ctx_api ps3_api = GFX_CTX_NONE;
@@ -186,7 +185,7 @@ static void gfx_ctx_ps3_swap_buffers(void *data)
    if (ps3_api == GFX_CTX_OPENGL_API || ps3_api == GFX_CTX_OPENGL_ES_API)
       psglSwap();
 #endif
-#ifdef HAVE_RSXGL
+#ifdef HAVE_EGL
    if (ps3_api == GFX_CTX_OPENGL_API)
       egl_swap_buffers(&(((gfx_ctx_ps3_data_t*)data)->egl));
 #endif
@@ -210,7 +209,7 @@ static void gfx_ctx_ps3_get_video_size(void *data,
 
 static void gfx_ctx_ps3_destroy_resources(gfx_ctx_ps3_data_t *ps3)
 {
-#ifdef HAVE_RSXGL
+#ifdef HAVE_EGL
    if (!ps3)
       return;
    if (ps3_api == GFX_CTX_OPENGL_API)
@@ -303,7 +302,7 @@ static void *gfx_ctx_ps3_init(void *video_driver)
    psglResetCurrentContext();
 #endif
 
-#ifdef HAVE_RSXGL
+#ifdef HAVE_EGL
    EGLint n;
    EGLint major, minor;
    static const EGLint attribs[] = {
@@ -327,7 +326,7 @@ static void *gfx_ctx_ps3_init(void *video_driver)
 
    gfx_ctx_ps3_get_available_resolutions();
 
-#ifdef HAVE_RSXGL
+#ifdef HAVE_EGL
    if (!egl_init_context(&ps3->egl, EGL_NONE, EGL_DEFAULT_DISPLAY,
             &major, &minor, &n, attribs, NULL))
    {
@@ -335,6 +334,8 @@ static void *gfx_ctx_ps3_init(void *video_driver)
       gfx_ctx_ps3_destroy(video_driver);
       return NULL;   
    }
+   egl_create_context(&ps3->egl, attribs);
+   egl_create_surface(&ps3->egl, 0);
 #endif
 
    return ps3;
@@ -365,7 +366,7 @@ static bool gfx_ctx_ps3_bind_api(void *data,
       return true;
 #endif
 
-#ifdef HAVE_RSXGL
+#ifdef HAVE_EGL
    if (ps3_api == GFX_CTX_OPENGL_API)
       return true;
 #endif
@@ -447,7 +448,16 @@ static uint32_t gfx_ctx_ps3_get_flags(void *data)
    return flags;
 }
 
-static void gfx_ctx_ps3_set_flags(void *data, uint32_t flags) { }
+static void gfx_ctx_ps3_set_flags(void *data, uint32_t flags) 
+{ 
+#ifdef HAVE_CG
+   BIT32_SET(flags, GFX_CTX_FLAGS_SHADERS_CG);
+#endif
+
+#ifdef HAVE_GLSL
+   BIT32_SET(flags, GFX_CTX_FLAGS_SHADERS_GLSL);
+#endif
+}
 
 const gfx_ctx_driver_t gfx_ctx_ps3 = {
    gfx_ctx_ps3_init,

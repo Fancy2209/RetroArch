@@ -70,6 +70,7 @@ fetch_revision() {
 
 echo "Fetching RetroArch's submodules..."
 fetch_git "https://github.com/libretro/common-shaders.git" "media/shaders_cg"
+fetch_git "https://github.com/libretro/glsl-shaders.git" "media/shaders_glsl"
 fetch_git "https://github.com/libretro/common-overlays.git" "media/overlays"
 fetch_git "https://github.com/libretro/retroarch-assets.git" "media/assets"
 fetch_git "https://github.com/libretro/retroarch-joypad-autoconfig.git" "media/autoconfig"

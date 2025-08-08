@@ -122,7 +122,11 @@ static int init_count = 0;
 #define net_socket(a,b,c) socket(a,b,c)
 #define net_connect(a,b,c) connect(a,b,c)
 #define net_shutdown(a,b) shutdown(a,b)
+#ifndef __PSL1GHT__
 #define net_socketclose(x) socketclose(x)
+#else
+#define net_socketclose(x) close(x)
+#endif
 #define net_recv(a,b,c,d) recv(a,b,c,d)
 #elif defined(GEKKO)
 #define SHUT_RD 0

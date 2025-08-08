@@ -29,6 +29,10 @@
 
 #include <net/net_compat.h>
 
+#ifdef __PS3__
+#include <defines/ps3_defines.h>
+#endif
+
 #if defined(_WIN32) && !defined(_XBOX)
 #if !defined(_WIN32_WINNT) || _WIN32_WINNT < 0x0600
 const char *inet_ntop(int af, const void *src, char *dst, socklen_t size)

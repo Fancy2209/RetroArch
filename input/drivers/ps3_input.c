@@ -37,6 +37,8 @@
 #include <retro_inline.h>
 
 #include "../input_driver.h"
+#include "../input_keymaps.h"
+#include "../../gfx/video_driver.h"
 
 #ifdef HAVE_MOUSE
 #ifndef MAX_MICE
@@ -874,6 +876,7 @@ static void ps3_input_free_input(void *data)
    free(ps3);
 }
 
+extern const struct rarch_key_map rarch_key_map_ps3[];
 static void* ps3_input_init(const char *joypad_driver)
 {
    int i;

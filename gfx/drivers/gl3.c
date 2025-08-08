@@ -2135,7 +2135,11 @@ static enum rarch_shader_type gl3_get_fallback_shader_type(enum rarch_shader_typ
       }
    }
 #endif
+#ifdef __PSL1GHT__
+   return RARCH_SHADER_GLSL; // WTF??
+#else
    return RARCH_SHADER_NONE;
+#endif
 }
 
 #ifdef HAVE_SLANG
@@ -2874,8 +2878,10 @@ static void *gl3_init(const video_info_t *video,
    RARCH_LOG("[GLCore] Vendor: %s, Renderer: %s.\n", vendor, renderer);
    RARCH_LOG("[GLCore] Version: %s.\n", version);
 
+   #ifndef __PSL1GHT__ // Why is this happening?
    if (string_is_equal(ctx_driver->ident, "null"))
       goto error;
+   #endif
 
    if (!string_is_empty(version))
       sscanf(version, "%u.%u", &gl->version_major, &gl->version_minor);
@@ -2974,9 +2980,11 @@ static void *gl3_init(const video_info_t *video,
 
 error:
    video_context_driver_free();
-   gl3_destroy_resources(gl);
    if (gl)
+   {
+      gl3_destroy_resources(gl);
       free(gl);
+   }
    return NULL;
 }
 
@@ -3394,6 +3402,7 @@ static bool gl3_read_viewport(void *data, uint8_t *buffer, bool is_idle)
    return true;
 
 error:
+   fflush(NULL);
    if (gl->flags & GL3_FLAG_USE_SHARED_CONTEXT)
       gl->ctx_driver->bind_hw_render(gl->ctx_data, true);
    return false;

@@ -28,6 +28,10 @@
 #include <compat/msvc.h>
 #endif
 
+#ifdef __PS3__
+#include <defines/ps3_defines.h>
+#endif
+
 #include <features/features_cpu.h>
 
 #include <net/net_socket.h>
