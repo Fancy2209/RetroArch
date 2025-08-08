@@ -1213,6 +1213,7 @@ static void *gl_glsl_init(void *data, const char *path)
 
 #ifndef HAVE_OPENGLES
    RARCH_LOG("[GLSL] Checking GLSL shader support...\n");
+   #ifndef __PSL1GHT__
    shader_support = glCreateProgram && glUseProgram && glCreateShader
       && glDeleteShader && glShaderSource && glCompileShader && glAttachShader
       && glDetachShader && glLinkProgram && glGetUniformLocation
@@ -1225,7 +1226,9 @@ static void *gl_glsl_init(void *data, const char *path)
       && glDisableVertexAttribArray
       && glVertexAttribPointer
       && glGenBuffers && glBufferData && glDeleteBuffers && glBindBuffer;
-
+   #else 
+   shader_support = true;
+   #endif
    if (!shader_support)
    {
       RARCH_ERR("[GLSL] GLSL shaders aren't supported by your OpenGL driver.\n");
